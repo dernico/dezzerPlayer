@@ -161,7 +161,25 @@ int main(int argc, char *argv[]) {
     }
 
     // Block the programm until a key is pressed
-    fgetc(stdin);
+    char command[100];
+    bool keepRunning = true;
+    while(keepRunning){
+
+        scanf("%s", command);
+
+        if(strcmp("pause", command) == 0){
+            app_launch_pause();
+        }
+
+        if(strcmp("resume", command) == 0){
+            app_launch_resume();
+        }
+
+        if(strcmp("exit", command) == 0){
+            keepRunning = false;
+        }
+
+    }
 
     if (dzconnect) {
         dz_object_release((dz_object_handle)dzconnect);
