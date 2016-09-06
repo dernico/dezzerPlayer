@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -36,6 +37,7 @@ static dz_connect_handle dzconnect;
 static dz_player_handle  dzplayer;
 static int activation_count = 0;
 //static char sz_track_url[256] = "dzmedia:///track/85509044";
+//static char sz_track_url[256] = "dzmedia:///track/13236650";
 static char sz_track_url[256] = "";
 
 static void app_shutdown();
@@ -161,11 +163,16 @@ int main(int argc, char *argv[]) {
     }
 
     // Block the programm until a key is pressed
-    char command[100];
+    char command[10];
     bool keepRunning = true;
     while(keepRunning){
 
-        scanf("%s", command);
+        fgets(command, 10, stdin); //scanf("%s", command);
+        int len = strlen(command);
+            if (len > 0 && command[len-1] == '\n')
+                command[len-1] = '\0';
+
+        log("command: %s\n", command);
 
         if(strcmp("pause", command) == 0){
             app_launch_pause();
@@ -181,15 +188,6 @@ int main(int argc, char *argv[]) {
 
     }
 
-    if (dzconnect) {
-        dz_object_release((dz_object_handle)dzconnect);
-        dzconnect = NULL;
-    }
-    if (dzplayer) {
-        dz_object_release((dz_object_handle)dzplayer);
-        dzplayer = NULL;
-    }
-
     log("-- shutdowned --\n");
     return 0;
 }
@@ -201,6 +199,17 @@ static void app_shutdown() {
     log("SHUTDOWN (2/2) - dzconnect = %p\n", dzconnect);
     if (dzconnect)
         dz_connect_deactivate(dzconnect, dz_connect_on_deactivate, NULL);
+
+    if (dzconnect) {
+        dz_object_release((dz_object_handle)dzconnect);
+        dzconnect = NULL;
+    }
+    if (dzplayer) {
+        dz_object_release((dz_object_handle)dzplayer);
+        dzplayer = NULL;
+    }
+
+    exit(0);
 }
 
 void app_connect_onevent_cb(dz_connect_handle handle,
@@ -343,10 +352,10 @@ void app_player_onevent_cb(dz_player_handle       handle,
 
         log("==== PLAYER_EVENT ==== PLAYLIST_TRACK_SELECTED for idx: %d - is_preview:%d\n", idx, is_preview);
         log("\tcan_pause_unpause:%d can_seek:%d nb_skip_allowed:%d\n", can_pause_unpause, can_seek, nb_skip_allowed);
-        if (selected_dzapiinfo)
-            log("\tnow:%s\n", selected_dzapiinfo);
-        if (next_dzapiinfo)
-            log("\tnext:%s\n", next_dzapiinfo);
+        //if (selected_dzapiinfo)
+        //    log("\tnow:%s\n", selected_dzapiinfo);
+        //if (next_dzapiinfo)
+        //    log("\tnext:%s\n", next_dzapiinfo);
     }
     nb_track_played++;
     break;
@@ -370,13 +379,16 @@ void app_player_onevent_cb(dz_player_handle       handle,
     case DZ_PLAYER_EVENT_RENDER_TRACK_END:
         log("==== PLAYER_EVENT ==== RENDER_TRACK_END for idx: %d\n", idx);
         log("\tnb_track_to_play : %d\tnb_track_played : %d\n", nb_track_to_play, nb_track_played);
-        if (nb_track_to_play != -1 &&  // unlimited
+        
+        app_shutdown();
+
+        /*if (nb_track_to_play != -1 &&  // unlimited
             nb_track_to_play == nb_track_played) {
             app_shutdown();
         }
         else {
             app_launch_play();
-        }
+        }*/
         break;
 
     case DZ_PLAYER_EVENT_RENDER_TRACK_PAUSED:
